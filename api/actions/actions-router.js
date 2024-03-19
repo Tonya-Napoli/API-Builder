@@ -3,15 +3,6 @@ const router = express.Router();
 const Actions = require('./actions-model'); // Assuming this path is correct
 const middleware = require('./actions-middlware'); // Make sure this path is also correct
 
-// [POST] /api/actions
-router.post('/', [middleware.validateAction, middleware.validateProjectId], async (req, res, next) => {
-    try {
-        const newAction = await Actions.insert(req.body); // Use the insert method from your actions-model
-        res.status(201).json(newAction);
-    } catch (err) {
-        next(err);
-    }
-});
 
 // [GET] /api/actions
 router.get('/', async (req, res, next) => {
@@ -37,16 +28,37 @@ router.get('/:id', async (req, res, next) => {
     }
 });
 
-// [PUT] /api/actions/:id
 router.put('/:id', async (req, res, next) => {
     try {
-        const updatedAction = await Actions.update(req.params.id, req.body); // Use the update method
+        // Destructure the expected fields from req.body
+        const { notes, description, completed, project_id } = req.body;
+
+        // Check if any of the required fields are missing in the request body
+        if (notes === undefined || description === undefined || completed === undefined || project_id === undefined) {
+            // If any are missing, respond with a 400 Bad Request status
+            return res.status(400).json({ message: 'Missing required fields: notes, description, completed, or project_id' });
+        }
+
+        // Proceed with updating the action since all required fields are present
+        const updatedAction = await Actions.update(req.params.id, req.body);
         if (updatedAction) {
-            res.json(updatedAction);
+            res.json(updatedAction); // Respond with the updated action
         } else {
+            // If the action cannot be found for updating, respond with a 404 Not Found status
             res.status(404).json({ message: 'Action not found' });
         }
     } catch (err) {
+        next(err); // Pass any errors to the error-handling middleware
+    }
+});
+// [POST] /api/actions
+
+router.post('/', [middleware.validateAction], async (req, res, next) => {
+    try {
+        const { project_id, description, notes } = req.body;
+        const newAction = await Actions.insert({ project_id, description, notes }); // Use the insert method from actions-model
+        res.status(201).json(newAction);
+    }   catch (err) {
         next(err);
     }
 });
