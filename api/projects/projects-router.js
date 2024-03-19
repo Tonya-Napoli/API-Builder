@@ -14,11 +14,7 @@ router.get('/', async (req, res, next) => {
 });
 
 // GET a project by ID
-// Notice: You don't need to declare this route twice, middleware.checkProjectExists can handle checking
 router.get('/:id', middleware.checkProjectExists, async (req, res, next) => {
-  // Since middleware.checkProjectExists may already retrieve the project,
-  // you could adjust its implementation to attach the project to `req` (like req.project)
-  // and simply use that here, avoiding another DB call. Otherwise:
   try {
     const project = await Projects.get(req.params.id);
     res.json(project);
@@ -30,16 +26,46 @@ router.get('/:id', middleware.checkProjectExists, async (req, res, next) => {
 // POST a new project
 router.post('/', middleware.validateProject, async (req, res, next) => {
   try {
-    const newProject = await Projects.insert(req.body); // Assuming insert is the correct method as per your model
+    const newProject = await Projects.insert(req.body); 
     res.status(201).json(newProject);
   } catch (err) {
     next(err);
   }
 });
 
-// Similarly adjust PUT, DELETE, and other endpoints to use the correct model functions
+router.put('/:id', middleware.checkProjectExists, async (req, res, next) => {
+  try {
+    const { name, description, completed } = req.body;
+    // Check if any of the required fields are missing in the request body
+    if (name === undefined || description === undefined || completed === undefined) {
+      return res.status(400).json({ message: 'Missing required name, description, or completed field' });
+    }
 
-// Export only the router
+    // Proceed with updating the project since all required fields are present
+    const updatedProject = await Projects.update(req.params.id, { name, description, completed });
+    
+    if (updatedProject) {
+      res.json(updatedProject); // Respond with the updated project
+    } else {
+    
+      res.status(500).json({ message: 'Failed to update the project' });
+    }
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete('/:id', middleware.checkProjectExists, async (req, res, next) => {
+  try {
+    const success = await Projects.remove(req.params.id);
+    if (success) {
+      res.status(204).end();
+    } else {
+      res.status(404).json({ message: 'Project not found' });
+    }
+  } catch (err) {
+    next(err);
+  }
+  });
+
 module.exports = router;
-
-

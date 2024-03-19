@@ -4,11 +4,11 @@ const Projects = require('./projects-model'); // Adjust the path as necessary
 // Middleware to check if a project exists
 async function checkProjectExists(req, res, next) {
     try {
-        const project = await Projects.findById(req.params.id);
+        const project = await Projects.get(req.params.id);
         if (!project) {
             return res.status(404).json({ message: 'Project not found' });
         }
-        req.project = project; // Optionally pass the project forward
+        req.project = project; 
         next();
     } catch (err) {
         next(err);
