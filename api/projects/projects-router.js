@@ -57,17 +57,28 @@ router.post('/', async (req, res, next) => {
 // [PUT] /api/projects/:id
 router.put('/:id', async (req, res, next) => {
   try {
-    if (!req.body.name || !req.body.description) { // Assuming these are the required fields
+    const { name, description, completed } = req.body;
+    // Validate presence of 'name' and 'description'
+    if (name === undefined || description === undefined || completed === undefined) {
       return res.status(400).json({ message: 'Missing required name or description field' });
     }
-    const updatedProject = await Projects.updateProject(req.params.id, req.body);
+
+    // Construct the update object with fields that can be updated
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (description !== undefined) updateData.description = description;
+    if (completed !== undefined) updateData.completed = completed; // Include 'completed' only if it's explicitly provided
+
+    // Attempt to update the project
+    const updatedProject = await Projects.update(req.params.id, updateData);
+
     if (updatedProject) {
-      res.json(updatedProject);
+      res.json(updatedProject); // Return the updated project
     } else {
-      res.status(404).json({ message: 'Project not found' });
+      res.status(404).json({ message: 'Project not found' }); // Project with provided ID doesn't exist
     }
   } catch (err) {
-    next(err);
+    next(err); // Pass any errors to the error-handling middleware
   }
 });
 
