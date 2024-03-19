@@ -1,12 +1,12 @@
-// Write your "actions" router here!
 const express = require('express');
 const router = express.Router();
-const Actions = require('./actions-model'); // This should be your data access layer
-const middleware = require('./actions-middlware'); // This should be your middleware layer
+const Actions = require('./actions-model'); // Assuming this path is correct
+const middleware = require('./actions-middlware'); // Make sure this path is also correct
 
+// [POST] /api/actions
 router.post('/', [middleware.validateAction, middleware.validateProjectId], async (req, res, next) => {
     try {
-        const newAction = await Actions.create(req.body);
+        const newAction = await Actions.insert(req.body); // Use the insert method from your actions-model
         res.status(201).json(newAction);
     } catch (err) {
         next(err);
@@ -16,7 +16,7 @@ router.post('/', [middleware.validateAction, middleware.validateProjectId], asyn
 // [GET] /api/actions
 router.get('/', async (req, res, next) => {
     try {
-        const actions = await Actions.findAll();
+        const actions = await Actions.get(); // Use the get method without id to fetch all actions
         res.json(actions);
     } catch (err) {
         next(err);
@@ -26,7 +26,7 @@ router.get('/', async (req, res, next) => {
 // [GET] /api/actions/:id
 router.get('/:id', async (req, res, next) => {
     try {
-        const action = await Actions.findById(req.params.id);
+        const action = await Actions.get(req.params.id); // Use the get method with id to fetch a specific action
         if (action) {
             res.json(action);
         } else {
@@ -37,29 +37,10 @@ router.get('/:id', async (req, res, next) => {
     }
 });
 
-// [POST] /api/actions
-router.post('/', async (req, res, next) => {
-    try {
-        const { project_id, description, notes } = req.body; // Assume these are the required fields
-        if (!project_id || !description || !notes) {
-            return res.status(400).json({ message: 'Missing required fields' });
-        }
-        // Optionally, verify project_id exists in projects table/database
-        const newAction = await Actions.create(req.body);
-        res.status(201).json(newAction);
-    } catch (err) {
-        next(err);
-    }
-});
-
 // [PUT] /api/actions/:id
 router.put('/:id', async (req, res, next) => {
     try {
-        const { project_id, description, notes } = req.body; // Assume these are the required fields
-        if (!project_id || !description || !notes) {
-            return res.status(400).json({ message: 'Missing required fields' });
-        }
-        const updatedAction = await Actions.update(req.params.id, req.body);
+        const updatedAction = await Actions.update(req.params.id, req.body); // Use the update method
         if (updatedAction) {
             res.json(updatedAction);
         } else {
@@ -73,7 +54,7 @@ router.put('/:id', async (req, res, next) => {
 // [DELETE] /api/actions/:id
 router.delete('/:id', async (req, res, next) => {
     try {
-        const success = await Actions.remove(req.params.id);
+        const success = await Actions.remove(req.params.id); // Use the remove method
         if (success) {
             res.status(204).end();
         } else {
@@ -85,4 +66,6 @@ router.delete('/:id', async (req, res, next) => {
 });
 
 module.exports = router;
+
+
 
