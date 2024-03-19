@@ -68,4 +68,13 @@ router.delete('/:id', middleware.checkProjectExists, async (req, res, next) => {
   }
   });
 
+  router.get('/:id/actions', middleware.checkProjectExists, async (req, res, next) => {
+    try {
+      const actions = await Projects.getProjectActions(req.params.id);
+      res.json(actions);
+    } catch (err) {
+      next(err);
+    }
+    });
+
 module.exports = router;
